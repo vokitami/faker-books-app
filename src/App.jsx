@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import BooksTable from './components/BooksTable.jsx';
+import BooksGallery from './components/BooksGallery.jsx'; // <- new vist
 import { TbArrowsExchange } from "react-icons/tb";
+import { CSVLink } from "react-csv"; // <- CSV export
 
 function App() {
-
   const [language, setLanguage] = useState('en-US');
   const [seed, setSeed] = useState('');
   const [likes, setLikes] = useState(5);
   const [reviews, setReviews] = useState(0); 
   const [books, setBooks] = useState([]);
   const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState('table'); // "table" o "gallery"
 
   const generateSeed = () => {
     const randomSeed = Math.floor(Math.random() * 100000).toString();
@@ -17,7 +19,6 @@ function App() {
   };
 
   const fetchBooks = async (pageNum) => {
-    console.log('fetching books');
     const res = await fetch(
       `http://localhost:5000/api/books?lang=${language}&seed=${seed}&likes=${likes}&reviews=${reviews}&page=${pageNum}`
     );
@@ -59,6 +60,7 @@ function App() {
     <>
       {/* HEADER */}
       <header className="bg-zinc-100 text-zinc-700 p-4 shadow rounded-lg flex flex-wrap gap-4 items-center justify-evenly pb-10">
+
         {/* Language */}
         <select 
           value={language} 
@@ -112,10 +114,32 @@ function App() {
             onChange={(e) => setReviews(parseFloat(e.target.value))}
           />
         </div>
+
+        {/* Botón Exportar CSV */}
+        <CSVLink
+          data={books}
+          filename="books.csv"
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+        >
+          Export to CSV
+        </CSVLink>
+
+        {/* Botón cambiar vista */}
+        <button
+          onClick={() => setViewMode(viewMode === 'table' ? 'gallery' : 'table')}
+          className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+        >
+          {viewMode === 'table' ? 'Gallery View' : 'Table View'}
+        </button>
+
       </header>
 
-      {/* Table */}
-      <BooksTable books={books.filter(book => book.likes >= likes)}/>
+      {/* Vista dinámica */}
+      {viewMode === 'table' ? (
+        <BooksTable books={books.filter(book => book.likes >= likes)} />
+      ) : (
+        <BooksGallery books={books.filter(book => book.likes >= likes)} />
+      )}
 
       {/* Sentinel */}
       <div id="sentinel" className="h-10"></div>
